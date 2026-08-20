@@ -1,0 +1,105 @@
+import pandas as pd
+import numpy as np
+from sklearn.neighbors import KNeighborsClassifier
+import matplotlib.pyplot as plt
+import warnings
+warnings.filterwarnings('ignore')
+
+# ==========================================
+# 1. LOAD DATA & APPLY STRICT LIMITERS
+# ==========================================
+df = pd.read_csv('lidar_data.csv')
+
+# Normal: Strictly below 100 (0-99)
+df_normal = df[(df['Dataset_Label'] == 'NORMAL') & (df['Raw_Value'] <= 99)]
+
+# Turbulent scenarios: Must be >= 100
+df_turb = df[(df['Dataset_Label'] != 'NORMAL') & (df['Raw_Value'] >= 100)]
+
+df_cleaned = pd.concat([df_normal, df_turb])
+
+# ==========================================
+# 2. EXTRACT PEAKS
+# ==========================================
+peak_data = []
+for label in ['NORMAL', 'LIGHT', 'MODERATE', 'SEVERE']:
+    subset = df_cleaned[df_cleaned['Dataset_Label'] == label]['Raw_Value']
+    if not subset.empty:
+        peak = subset.round(-1).mode().iloc[0]
+    else:
+        peak = 0 if label == 'NORMAL' else 150
+    peak_data.append({'Dataset_Label': label, 'Raw_Value': peak})
+
+centroids = pd.DataFrame(peak_data)
+
+# ==========================================
+# 3. TRAIN KNN & OVERRIDE BOUNDARIES
+# ==========================================
+X_train = centroids[['Raw_Value']]
+y_train = centroids['Dataset_Label']
+knn = KNeighborsClassifier(n_neighbors=1)
+knn.fit(X_train, y_train)
+
+test_values = np.arange(0, 1024).reshape(-1, 1)
+predictions = knn.predict(test_values)
+
+# FORCED LIMITERS & SPECIFIC USER RANGES
+for val in range(0, 1024):
+    if val <= 99:
+        predictions[val] = 'NORMAL'
+    elif 100 <= val <= 395:
+        predictions[val] = 'LIGHT'
+    elif 396 <= val <= 484:
+        predictions[val] = 'MODERATE'
+    elif val >= 485:
+        predictions[val] = 'SEVERE'
+
+# ==========================================
+# 4. PRINT FINAL CORRECTED THRESHOLDS
+# ==========================================
+print("=== FINAL CORRECTED DASHBOARD THRESHOLDS ===")
+current_label = predictions[0]
+start_val = 0
+for i in range(1, len(predictions)):
+    if predictions[i] != current_label:
+        print(f"{current_label} Range: {start_val} to {i-1}")
+        current_label = predictions[i]
+        start_val = i
+print(f"{current_label} Range: {start_val} to 1023")
+
+# ==========================================
+# 5. GENERATE 1D SCATTER PLOT
+# ==========================================
+plt.figure(figsize=(14, 6))
+plt.style.use('seaborn-v0_8-darkgrid')
+
+# Data rows (i=0 to i=3)
+cats = ['NORMAL', 'LIGHT', 'SEVERE', 'MODERATE']
+# Display labels: User wants SEVERE at the top, MODERATE between SEVERE and LIGHT
+display_labels = ['NORMAL', 'LIGHT', 'MODERATE', 'SEVERE']
+colors = {'NORMAL': 'green', 'LIGHT': 'gold', 'MODERATE': 'orange', 'SEVERE': 'red'}
+
+# Plot background zones
+plt.axvspan(0, 99, color='green', alpha=0.1, label='NORMAL Zone (0-99)')
+plt.axvspan(100, 395, color='gold', alpha=0.1, label='LIGHT Zone (100-395)')
+plt.axvspan(396, 484, color='orange', alpha=0.1, label='MODERATE Zone (396-484)')
+plt.axvspan(485, 1023, color='red', alpha=0.1, label='SEVERE Zone (485-1023)')
+
+# Plot data points in their assigned physical rows
+for i, cat in enumerate(cats):
+    subset = df_cleaned[df_cleaned['Dataset_Label'] == cat]
+    y_jitter = np.random.normal(i, 0.1, size=len(subset))
+    plt.scatter(subset['Raw_Value'], y_jitter, color=colors[cat], alpha=0.4, s=10, label=f'Data: {cat}')
+
+# Apply the requested text labels to the Y-axis
+plt.yticks(range(len(cats)), display_labels, fontweight='bold')
+plt.xlabel('Sensor Raw Value (0-1023)', fontweight='bold')
+
+# Deduplicate legend labels
+handles, labels = plt.gca().get_legend_handles_labels()
+by_label = dict(zip(labels, handles))
+plt.legend(by_label.values(), by_label.keys(), bbox_to_anchor=(1.05, 1), loc='upper left')
+
+plt.title('1D Density Scatter Plot: Final Threshold Findings (Labels Updated)', fontsize=14, fontweight='bold')
+plt.tight_layout()
+plt.show()
