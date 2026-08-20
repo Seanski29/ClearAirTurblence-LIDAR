@@ -12,9 +12,9 @@ const int sensorPin = A0;
 // --- ADJUSTABLE THRESHOLD RANGES ---
 // ==========================================
 // Change these numbers based on your fog testing
-int normalLimit = 150; // 0 to 150
-int lightLimit = 350;     //151 to 350
-int moderateLimit = 500;   // 351 to 500
+int normalLimit = 50; // 0 to 150
+int lightLimit = 250;     //151 to 350
+int moderateLimit = 450;   // 351 to 500
 int maxReading = 1000;     // Maximum expected severe reading
 
 // ==========================================
@@ -65,18 +65,18 @@ void loop() {
   // ROW 0: The Header (20 chars exactly)
   // ==========================================
   lcd.setCursor(0, 0);
-  lcd.print("  LIDAR TURBULENCE  ");
+  lcd.print("~~~LIDAR SYSTEM~~~  ");
 
   // ==========================================
   // ROW 1: Atmospheric Reading 
   // ==========================================
   lcd.setCursor(0, 1);
-  lcd.print("Weather Reading: ");
+  lcd.print("Atmos Reading: ");
   lcd.print(average);
   lcd.print("   "); // Blank spaces clear leftover digits
 
   // ==========================================
-  // ROW 2: The Volume Slider UI
+  // ROW 2: The Turbulence Status Text
   // ==========================================
   // Map the average reading (0 - maxReading) to a 20-character width
   int fillLevel = map(average, 0, maxReading, 0, 20);
@@ -85,30 +85,30 @@ void loop() {
 
   lcd.setCursor(0, 2);
    if (average <= normalLimit) {
-    lcd.print("TURBULENCE: NORMAL  ");
+    lcd.print("COND: NORMAL        ");
   } 
   else if (average <= lightLimit) {
-    lcd.print("TURBULENCE: LIGHT          ");
+    lcd.print("COND: LIGHT TURB    ");
   } 
     else if (average <= moderateLimit) {
-    lcd.print("TURBULENCE: MODERATE  ");
+    lcd.print("COND: MODERATE TURB ");
   } 
   else {
-    lcd.print("TURBULENCE: SEVERE  ");
+    lcd.print("COND: SEVERE TURB   ");
   }
   // ==========================================
-  // ROW 3: The Turbulence Status Text
+  // ROW 3: The Volume Slider UI
   // ==========================================
   lcd.setCursor(0, 3);
    for (int i = 0; i < 20; i++) {
     // Keep the static dividers at specific positions
-    if (i == 6) {
+    if (i == 5) {
       lcd.print("");
     } 
     else if (i == 10) {
       lcd.print("");
     } 
-     else if (i == 20) {
+     else if (i == 15) {
       lcd.print("");
     } 
     // Fill the bar with a block character if the reading reaches this point
