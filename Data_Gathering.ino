@@ -1,80 +1,33 @@
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
-
-LiquidCrystal_I2C lcd(0x27, 20, 4); 
+// ==========================================
+// KNN DATA GATHERING TOOL
+// ==========================================
+// CHANGE THIS WORD BEFORE EVERY TEST: 
+// Options: "NORMAL", "LIGHT", "MODERATE", "SEVERE"
+String currentScenario = "NORMAL"; 
 
 const int laserPin = 7;
 const int sensorPin = A0;
 
-// ==========================================
-// DATA SMOOTHING VARIABLES
-// ==========================================
-const int numReadings = 10;
-int readings[numReadings];      
-int readIndex = 0;              
-long total = 0;                  
-int average = 0;                
-
 void setup() {
+  // Set baud rate to 9600 for Serial Monitor
   Serial.begin(9600);
   
   pinMode(laserPin, OUTPUT);
-  digitalWrite(laserPin, HIGH); // Turn laser ON
+  digitalWrite(laserPin, HIGH); 
   
-  lcd.init();                      
-  lcd.backlight();
-  lcd.setCursor(0, 0);
-  lcd.print("Data Gathering Mode");
-  lcd.setCursor(0, 1);
-  lcd.print("Warming up sensor...");
-  
-  // Initialize all smoothing readings to 0
-  for (int thisReading = 0; thisReading < numReadings; thisReading++) {
-    readings[thisReading] = 0;
-  }
-  
-  delay(2000);
-  lcd.clear();
+  // Give the user 5 seconds to open the Serial Monitor
+  delay(5000);
+  Serial.println("Dataset_Label,Raw_Value");
 }
 
 void loop() {
-  // Read the raw data from the sensor
   int rawValue = analogRead(sensorPin);
 
-  // ==========================================
-  // MOVING AVERAGE ALGORITHM
-  // ==========================================
-  total = total - readings[readIndex];         // Subtract the last reading
-  readings[readIndex] = rawValue;              // Read from the sensor
-  total = total + readings[readIndex];         // Add the reading to the total
-  readIndex = readIndex + 1;                   // Advance to the next position
-
-  if (readIndex >= numReadings) {              // If we're at the end of the array...
-    readIndex = 0;                             // ...wrap around to the beginning
-  }
-  
-  average = total / numReadings;               // Calculate the stable average
-
-  // ==========================================
-  // DISPLAY DATA
-  // ==========================================
-  // 1. To the LCD Screen
-  lcd.setCursor(0, 0);
-  lcd.print("Raw Data: ");
-  lcd.print(rawValue);
-  lcd.print("    "); 
-
-  lcd.setCursor(0, 1);
-  lcd.print("Stable:   ");
-  lcd.print(average);
-  lcd.print("    "); 
-
-  // 2. To the Serial Plotter/Monitor (Tools > Serial Plotter)
-  Serial.print("Raw:");
-  Serial.print(rawValue);
+  // Print in a perfect CSV format (Comma Separated Values)
+  Serial.print(currentScenario);
   Serial.print(",");
-  Serial.print("Stable:");
-  Serial.println(average);
+  Serial.println(rawValue);
 
-  delay(100); 
+  // Take exactly 1 reading per second
+  delay(1000); 
 }
