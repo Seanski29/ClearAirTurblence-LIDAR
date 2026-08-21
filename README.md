@@ -1,7 +1,7 @@
 # DEVELOPMENT OF AN INSTRUCTIONAL LIDAR-BASED TURBULENCE DETECTION SYSTEM PROTOTYPE
 
 ## Overview
-The **NAAP (Non-intrusive Atmospheric Analysis Prototype)** is an embedded system designed to simulate and detect Clear Air Turbulence (CAT) using optical backscatter analysis. By measuring the intensity of a laser beam as it interacts with aerosol particles, the system provides real-time turbulence classification (Normal, Moderate, or Severe) for aviation safety research.
+The **LIDAR Prototype** is an embedded system designed to simulate and detect Clear Air Turbulence (CAT) using optical backscatter analysis. By measuring the intensity of a laser beam as it interacts with aerosol particles, the system provides real-time turbulence classification (Normal, Moderate, or Severe) for aviation safety research.
 
 ## Features
 - **Classification:** Uses a lightweight K-Nearest Neighbors (KNN) algorithm running locally on an Arduino Mega.
@@ -40,7 +40,8 @@ The system implements a 1D K-Nearest Neighbors algorithm. By mapping sensor inte
 - DEL ROSARIO, SEAN
 
 
-- *Capstone Project:  In partial fulfillment of the Requirements for the degree of BACHELOR OF SCIENCE IN AVIATION ELECTRONICS TECHNOLOGY*
+
+*Capstone Project:  In partial fulfillment of the Requirements for the degree of BACHELOR OF SCIENCE IN AVIATION ELECTRONICS TECHNOLOGY*
 
 ## License
 This project is for academic use under the National Aviation Academy of the Philippines Fernando Air Base Campus.
